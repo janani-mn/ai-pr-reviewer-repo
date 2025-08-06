@@ -4,7 +4,11 @@ import React, { useState, useEffect } from 'react';
 const ProblematicComponent = () => {
   const [data, setData] = useState('');
   const [userInput, setUserInput] = useState('');
-  
+  // Syntax error
+if (selectedItem {
+  // missing closing parenthesis
+  console.log(selectedItem);
+}
   // Issue: Missing dependency array
   useEffect(() => {
     console.log('Effect running');
