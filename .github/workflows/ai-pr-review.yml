@@ -1,0 +1,188 @@
+name: AI-Powered PR Review
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches: [main, master, develop]
+
+permissions:
+  contents: read
+  pull-requests: write
+  checks: write
+  security-events: write
+
+jobs:
+  ai-pr-review:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        token: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Get changed files
+      id: changed-files
+      uses: tj-actions/changed-files@v40
+      with:
+        files: |
+          **/*.js
+          **/*.ts
+          **/*.jsx
+          **/*.tsx
+          **/*.py
+          **/*.java
+          **/*.go
+          **/*.rs
+          **/*.cpp
+          **/*.c
+          **/*.h
+          **/*.cs
+          **/*.php
+          **/*.rb
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+        cache: 'pip'
+
+    - name: Install dependencies
+      run: |
+        npm install
+        pip install -r requirements.txt
+
+    - name: Run Syntax Check
+      id: syntax-check
+      run: |
+        echo "Running syntax checks..."
+        node scripts/syntax-checker.js "${{ steps.changed-files.outputs.all_changed_files }}"
+
+    - name: Security Vulnerability Scan
+      id: security-scan
+      run: |
+        echo "Running security scans..."
+        # CodeQL Analysis
+        npm audit --audit-level moderate
+        # Semgrep for security patterns
+        python -m semgrep --config=auto --json --output=security-results.json ${{ steps.changed-files.outputs.all_changed_files }}
+        # Custom security checker
+        python scripts/security-checker.py "${{ steps.changed-files.outputs.all_changed_files }}"
+
+    - name: Linting Analysis
+      id: lint-check
+      run: |
+        echo "Running linting checks..."
+        # ESLint for JS/TS
+        npx eslint ${{ steps.changed-files.outputs.all_changed_files }} --format json --output-file eslint-results.json || true
+        # Pylint for Python
+        python scripts/lint-checker.py "${{ steps.changed-files.outputs.all_changed_files }}"
+
+    - name: Code Quality Analysis
+      id: quality-check
+      run: |
+        echo "Running code quality analysis..."
+        node scripts/quality-analyzer.js "${{ steps.changed-files.outputs.all_changed_files }}"
+
+    - name: AI-Powered Review
+      id: ai-review
+      env:
+        OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        PR_NUMBER: ${{ github.event.number }}
+        REPO_OWNER: ${{ github.repository_owner }}
+        REPO_NAME: ${{ github.event.repository.name }}
+      run: |
+        echo "Running AI-powered analysis..."
+        python scripts/ai-reviewer.py \
+          --files "${{ steps.changed-files.outputs.all_changed_files }}" \
+          --pr-number "${{ github.event.number }}" \
+          --repo "${{ github.repository }}"
+
+    - name: Generate Review Report
+      id: generate-report
+      run: |
+        echo "Generating comprehensive review report..."
+        python scripts/report-generator.py \
+          --syntax-results syntax-results.json \
+          --security-results security-results.json \
+          --lint-results eslint-results.json \
+          --quality-results quality-results.json \
+          --ai-results ai-results.json \
+          --output pr-review-report.md
+
+    - name: Post Review Comment
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const fs = require('fs');
+          
+          let reviewReport = '';
+          try {
+            reviewReport = fs.readFileSync('pr-review-report.md', 'utf8');
+          } catch (error) {
+            reviewReport = '## 🤖 AI PR Review\n\nUnable to generate review report. Please check the workflow logs.';
+          }
+
+          // Post the review as a comment
+          await github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: reviewReport
+          });
+
+    - name: Set PR Status
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const fs = require('fs');
+          
+          // Read results and determine overall status
+          let hasErrors = false;
+          let hasWarnings = false;
+          
+          try {
+            // Check for critical issues
+            const securityResults = JSON.parse(fs.readFileSync('security-results.json', 'utf8'));
+            const qualityResults = JSON.parse(fs.readFileSync('quality-results.json', 'utf8'));
+            
+            hasErrors = securityResults.errors > 0 || qualityResults.critical > 0;
+            hasWarnings = securityResults.warnings > 0 || qualityResults.warnings > 0;
+          } catch (error) {
+            console.log('Could not read results files');
+          }
+
+          // Set appropriate status
+          const state = hasErrors ? 'failure' : (hasWarnings ? 'success' : 'success');
+          const description = hasErrors ? 
+            'Critical issues found - review required' : 
+            hasWarnings ? 
+            'Minor issues found - consider addressing' : 
+            'No major issues detected';
+
+          await github.rest.repos.createCommitStatus({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            sha: context.sha,
+            state: state,
+            description: description,
+            context: 'AI PR Review'
+          });
+
+    - name: Upload Results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: pr-review-results
+        path: |
+          *-results.json
+          pr-review-report.md
+        retention-days: 30
