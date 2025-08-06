@@ -1,0 +1,44 @@
+{
+  "name": "ai-pr-reviewer",
+  "version": "1.0.0",
+  "description": "AI-powered pull request review system that automatically checks for code quality, security vulnerabilities, and best practices",
+  "main": "scripts/syntax-checker.js",
+  "scripts": {
+    "syntax-check": "node scripts/syntax-checker.js",
+    "quality-analyze": "node scripts/quality-analyzer.js",
+    "install-tools": "npm install -g eslint @typescript-eslint/parser @typescript-eslint/eslint-plugin && pip install flake8 semgrep bandit",
+    "test": "echo 'No tests yet' && exit 0"
+  },
+  "keywords": [
+    "ai",
+    "code-review",
+    "github-actions",
+    "static-analysis",
+    "security",
+    "linting",
+    "quality-assurance"
+  ],
+  "author": "AI PR Reviewer",
+  "license": "MIT",
+  "dependencies": {
+    "acorn": "^8.11.3"
+  },
+  "devDependencies": {
+    "eslint": "^8.57.0",
+    "@typescript-eslint/parser": "^6.21.0",
+    "@typescript-eslint/eslint-plugin": "^6.21.0",
+    "typescript": "^5.3.3"
+  },
+  "engines": {
+    "node": ">=16.0.0",
+    "npm": ">=7.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/your-org/ai-pr-reviewer.git"
+  },
+  "bugs": {
+    "url": "https://github.com/your-org/ai-pr-reviewer/issues"
+  },
+  "homepage": "https://github.com/your-org/ai-pr-reviewer#readme"
+}
