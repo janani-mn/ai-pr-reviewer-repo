@@ -122,34 +122,12 @@ class SyntaxChecker {
 
     async checkJavaScript(file) {
         try {
-            // Use acorn parser to check JS syntax
-            const acorn = require('acorn');
-            const content = fs.readFileSync(file, 'utf8');
-            
-            try {
-                acorn.parse(content, { 
-                    ecmaVersion: 2022,
-                    sourceType: 'module',
-                    allowReturnOutsideFunction: true
-                });
-            } catch (parseError) {
-                // Try as script instead of module
-                try {
-                    acorn.parse(content, { 
-                        ecmaVersion: 2022,
-                        sourceType: 'script'
-                    });
-                } catch (scriptError) {
-                    throw new Error(`JavaScript syntax error: ${parseError.message}`);
-                }
-            }
+            // Use ESLint for syntax checking (supports JSX and ES6 modules)
+            // Assumes ESLint is installed and configured in the project
+            execSync(`npx eslint --no-eslintrc --parser babel-eslint --rule 'no-unused-vars: off' --rule 'react/jsx-uses-react: off' --rule 'react/react-in-jsx-scope: off' --env es6,node --parser-options ecmaVersion:2022,sourceType:module,ecmaFeatures:{jsx:true} "${file}"`, { stdio: 'pipe' });
         } catch (error) {
-            // Fallback: try with node --check
-            try {
-                execSync(`node --check "${file}"`, { stdio: 'pipe' });
-            } catch (nodeError) {
-                throw new Error(`Node.js syntax check failed: ${nodeError.message}`);
-            }
+            const output = error.stdout?.toString() || error.stderr?.toString() || '';
+            throw new Error(`ESLint syntax check failed: ${output}`);
         }
     }
 
