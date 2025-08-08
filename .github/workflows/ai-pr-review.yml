@@ -65,6 +65,9 @@ jobs:
         echo "Running syntax checks..."
         node scripts/syntax-checker.js "${{ steps.changed-files.outputs.all_changed_files }}"
 
+    - name: Install Semgrep
+      run: pip install semgrep
+
     - name: Security Vulnerability Scan
       id: security-scan
       run: |
@@ -72,7 +75,7 @@ jobs:
         # CodeQL Analysis
         npm audit --audit-level moderate
         # Semgrep for security patterns
-        python -m semgrep --config=auto --json --output=security-results.json ${{ steps.changed-files.outputs.all_changed_files }}
+        semgrep --config=auto --json --output=security-results.json ${{ steps.changed-files.outputs.all_changed_files }}
         # Custom security checker
         python scripts/security-checker.py "${{ steps.changed-files.outputs.all_changed_files }}"
 
