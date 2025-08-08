@@ -19,7 +19,10 @@ class ReportGenerator:
 > **Review Status:** {status}  
 > **Overall Score:** {overall_score}/100
 
-## 📊 Summary
+## �️ Files Reviewed
+{files_section}
+
+## �📊 Summary
 
 {summary_section}
 
@@ -50,9 +53,8 @@ class ReportGenerator:
 """
 
     def generate_report(self, syntax_file: str, security_file: str, lint_file: str, 
-                       quality_file: str, ai_file: str, output_file: str):
+                       quality_file: str, ai_file: str, output_file: str, files: list = None):
         """Generate comprehensive PR review report"""
-        
         # Load all result files
         results = {
             'syntax': self._load_json(syntax_file),
@@ -61,7 +63,10 @@ class ReportGenerator:
             'quality': self._load_json(quality_file),
             'ai': self._load_json(ai_file)
         }
-        
+
+        # Prepare files section
+        files_section = self._generate_files_section(files)
+
         # Generate report sections
         status = self._determine_status(results)
         overall_score = self._calculate_overall_score(results)
@@ -72,12 +77,13 @@ class ReportGenerator:
         ai_section = self._generate_ai_section(results['ai'])
         action_items = self._generate_action_items(results)
         recommendations = self._generate_recommendations(results, overall_score)
-        
+
         # Generate final report
         report = self.template.format(
             timestamp=datetime.now().strftime("%Y-%m-%d %H:%M:%S UTC"),
             status=status,
             overall_score=overall_score,
+            files_section=files_section,
             summary_section=summary_section,
             security_section=security_section,
             lint_section=lint_section,
@@ -86,13 +92,18 @@ class ReportGenerator:
             action_items=action_items,
             recommendations=recommendations
         )
-        
+
         # Save report
         with open(output_file, 'w') as f:
             f.write(report)
-        
+
         print(f"✅ Generated comprehensive review report: {output_file}")
         return report
+
+    def _generate_files_section(self, files: list) -> str:
+        if not files:
+            return '_No files provided._'
+        return '\n'.join([f'- `{f}`' for f in files])
 
     def _load_json(self, file_path: str) -> Dict[str, Any]:
         """Load JSON file safely"""
@@ -407,9 +418,15 @@ def main():
     parser.add_argument('--quality-results', default='quality-results.json')
     parser.add_argument('--ai-results', default='ai-results.json')
     parser.add_argument('--output', default='pr-review-report.md')
-    
+    parser.add_argument('--files', nargs='*', default=None, help='List of files reviewed')
+
     args = parser.parse_args()
-    
+
+    # If files is a single string (from shell), split by space
+    files = args.files
+    if files and len(files) == 1 and isinstance(files[0], str) and ' ' in files[0]:
+        files = files[0].split()
+
     generator = ReportGenerator()
     generator.generate_report(
         args.syntax_results,
@@ -417,7 +434,8 @@ def main():
         args.lint_results,
         args.quality_results,
         args.ai_results,
-        args.output
+        args.output,
+        files
     )
 
 if __name__ == '__main__':
