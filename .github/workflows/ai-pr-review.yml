@@ -121,6 +121,7 @@ jobs:
           --lint-results eslint-results.json \
           --quality-results quality-results.json \
           --ai-results ai-results.json \
+          --files "${{ steps.changed-files.outputs.all_changed_files }}" \
           --output pr-review-report.md
 
     - name: Post Review Comment
