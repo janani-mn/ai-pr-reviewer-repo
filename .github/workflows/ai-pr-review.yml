@@ -96,6 +96,7 @@ jobs:
 
     - name: AI-Powered Review
       id: ai-review
+      if: ${{ secrets.OPENAI_API_KEY != '' }}
       env:
         OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
