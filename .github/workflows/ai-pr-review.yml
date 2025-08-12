@@ -62,6 +62,7 @@ jobs:
 
     - name: Run Syntax Check
       id: syntax-check
+      continue-on-error: true
       run: |
         echo "Running syntax checks..."
         node scripts/syntax-checker.js "${{ steps.changed-files.outputs.all_changed_files }}"

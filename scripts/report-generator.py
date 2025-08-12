@@ -28,6 +28,9 @@ class ReportGenerator:
 
 ## 🔍 Detailed Analysis
 
+### 📝 Syntax Check
+{syntax_section}
+
 ### 🔒 Security Analysis
 {security_section}
 
@@ -71,6 +74,7 @@ class ReportGenerator:
         status = self._determine_status(results)
         overall_score = self._calculate_overall_score(results)
         summary_section = self._generate_summary_section(results)
+        syntax_section = self._generate_syntax_section(results['syntax'])
         security_section = self._generate_security_section(results['security'])
         lint_section = self._generate_lint_section(results['lint'])
         quality_section = self._generate_quality_section(results['quality'])
@@ -85,6 +89,7 @@ class ReportGenerator:
             overall_score=overall_score,
             files_section=files_section,
             summary_section=summary_section,
+            syntax_section=syntax_section,
             security_section=security_section,
             lint_section=lint_section,
             quality_section=quality_section,
@@ -409,6 +414,23 @@ class ReportGenerator:
         recommendations.append("4. Update documentation if needed")
         
         return "\n".join(recommendations)
+
+    def _generate_syntax_section(self, syntax: Dict[str, Any]) -> str:
+        """Generate syntax error section with file and line info"""
+        if not syntax or (not syntax.get('errors') and not syntax.get('warnings')):
+            return "✅ No syntax errors or warnings detected."
+        section = ""
+        errors = syntax.get('errors', [])
+        warnings = syntax.get('warnings', [])
+        if errors:
+            section += "### ❌ Syntax Errors\n\n"
+            for err in errors:
+                section += f"- **{err.get('file', 'Unknown')} (Line {err.get('line', '?')})**: {err.get('message', '')}\n"
+        if warnings:
+            section += "\n### ⚠️ Syntax Warnings\n\n"
+            for warn in warnings:
+                section += f"- **{warn.get('file', 'Unknown')} (Line {warn.get('line', '?')})**: {warn.get('message', '')}\n"
+        return section
 
 def main():
     parser = argparse.ArgumentParser(description='Generate PR Review Report')
