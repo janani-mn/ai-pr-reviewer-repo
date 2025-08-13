@@ -65,7 +65,7 @@ jobs:
       continue-on-error: true
       run: |
         echo "Running syntax checks..."
-        node scripts/syntax-checker.js "${{ steps.changed-files.outputs.all_changed_files }}"
+        npx eslint ${{ steps.changed-files.outputs.all_changed_files }}
 
     - name: Install Semgrep
       run: pip install semgrep
