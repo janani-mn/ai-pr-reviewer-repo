@@ -1,29 +1,30 @@
-// Sample JS file with various errors for PR review testing
+// sample-js-errors.js
+// This file contains intentional errors for testing ESLint and your PR workflow
 
 function buggyFunction(a, b) {
-  // Error: Unused variable
+  // Unused variable
   let unusedVar = 42;
 
-  // Error: Undefined variable
+  // Undefined variable
   let result = a + b + notDefined;
 
-  // Error: Shadowed variable
+  // Shadowed variable
   let a = 10;
 
-  // Error: Direct mutation of function parameter
+  // Direct mutation of function parameter
   b++;
 
-  // Error: Console statement in production code
+  // Console statement in production code
   console.log('Debug info:', a, b);
 
-  // Error: Missing semicolon
+  // Missing semicolon
   return result
 }
 
-// Error: Incorrect import/export syntax
+// Incorrect import/export syntax
 require('fs');
 
-// Error: Function declared but never used
+// Function declared but never used
 function neverUsed() {
   return 'I am never called';
 }
