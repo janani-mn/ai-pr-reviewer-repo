@@ -124,7 +124,7 @@ class SyntaxChecker {
         try {
             // Use ESLint for syntax checking (supports JSX and ES6 modules)
             // Assumes ESLint is installed and configured in the project
-            execSync(`npx eslint --no-eslintrc --parser @babel/eslint-parser --rule 'no-unused-vars: off' --rule 'react/jsx-uses-react: off' --rule 'react/react-in-jsx-scope: off' --env es6,node --parser-options ecmaVersion:2022,sourceType:module,ecmaFeatures:{jsx:true} "${file}"`, { stdio: 'pipe' });
+            execSync(`npx eslint --no-eslintrc --parser @babel/eslint-parser --rule 'no-unused-vars: off' --rule 'react/jsx-uses-react: off' --rule 'react/react-in-jsx-scope: off' --env es6,node --parser-options requireConfigFile:false,ecmaVersion:2022,sourceType:module,ecmaFeatures:{jsx:true} "${file}"`, { stdio: 'pipe' });
         } catch (error) {
             const output = error.stdout?.toString() || error.stderr?.toString() || '';
             throw new Error(`ESLint syntax check failed: ${output}`);
